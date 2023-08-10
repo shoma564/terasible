@@ -83,14 +83,16 @@ resource "libvirt_domain" "terraform-vm" {
 
 
 resource "null_resource" "run_ansible" {
+  count = length(libvirt_domain.terraform-vm)
+  
   triggers = {
-    vm_count = "${libvirt_domain.terraform-vm.*.id}"
+    vm_id = libvirt_domain.terraform-vm[count.index].id
   }
 
   provisioner "local-exec" {
     command = <<COMMAND
     ./ansiblessh.sh
-    ansible-playbook k3s-ansible/site.yml
+    ansible-playbook k3s-ansible/site.yml -i inventory/my-cluster/hosts.ini
     COMMAND
   }
 }
